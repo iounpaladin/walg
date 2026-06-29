@@ -64,10 +64,10 @@ def parabolic(e: Matrix, name='n'):
         if λ >= 0:
             parabolic_basis[λ] = [vec.reshape(size, size) for vec in vecs]
 
-    return _genericise(parabolic_basis, name=name)
+    return _formal_span(parabolic_basis, name=name)
 
 
-def _genericise(eigenbasis, name='N'):
+def _formal_span(eigenbasis, name='N'):
     total = []
     size = 0
     for λ, basis in eigenbasis.items():
@@ -82,3 +82,4 @@ def _genericise(eigenbasis, name='N'):
 
 def Parabolic(e: Matrix, name='N'):
     return parabolic(e, name)  # fuck baker campbell hausdorff
+    # P is positive eigenspace of h acting on G by conjugation
