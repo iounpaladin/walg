@@ -3,7 +3,7 @@ from symbols import *
 from sympy.matrices import *
 
 
-def cocharacter(size=dimension):  # Generic cocharacter
+def Cocharacter(size=dimension):  # Generic cocharacter
     r"""
     Generic cocharacter of the form \lambda^\vee(t) \in G(K).
     :param size: The size of the cocharacter
