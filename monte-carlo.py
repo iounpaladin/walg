@@ -37,7 +37,20 @@ g2 = Matrix([
 # But in particular from G(K) we want the elts g', g'' so g = g' diag g''
 # But SNF only works if g \in G(O)
 
-pprint(smith_normal_decomp(g2, domain=O))
+def cartan(g):
+    """
+    g \in G(K) \mapsto (g', t, g'') with g'tg'' = g; g', g'' \in G(O), t \in T(K)
+    """
+
+    # clear denominator, do smith normal form, then divide t's diagonal by the original denominator
+
+    t_k, g_o_1, g_o_2 = smith_normal_decomp(g, domain=O)
+
+    pprint(g_o_1 * g * g_o_2 - t_k)
+
+    return g_o_1, t_k, g_o_2
+
+pprint(cartan(g2))
 
 # TODO:
 # 1. Cartan decomposition of arbitrary g
