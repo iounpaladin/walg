@@ -13,12 +13,7 @@ from sympy import *
 # [I_p \lambda^\vee(t) G(O) \cap U_P(K) G(O)]/G(O) \neq \emptyset?
 
 
-# Proposal:
-# For g \in GL_n(K), figure out how to quickly compute its Smith normal = Cartan decomposition
-# Then refine using Bruhat decomposition
-# That says if you have a matrix, you get its I,G(O) double coset
-# Then can read I_P,G(O) off of that
-# Then sample "random"ish matrices in U_P(K)
+
 def bracket(x, y):
     return x * y - y * x
 
