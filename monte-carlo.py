@@ -47,38 +47,98 @@ def cartan(g):
 
     t_k, g_o_left, g_o_right = smith_normal_decomp(g, domain=O)
 
-    return g_o_left, t_k, g_o_right
+    return g_o_left.inv(), t_k, g_o_right.inv()
 
 
-def iwahori_bruhat(matrix: Matrix) -> Tuple(Matrix, Matrix, Matrix):
+def mod_t(matrix: Matrix) -> Matrix:
+    return matrix.applyfunc(lambda x: x.subs(t, 0))
+
+def elementary_swap(size, row_i, row_j):
+    out = eye(size)
+    out[row_i, row_i] = 0
+    out[row_j, row_j] = 0
+    out[row_i, row_j] = 1
+    out[row_j, row_i] = 1
+
+    return out
+
+def elementary_scale(size, row_i, scalar):
+    return diag(*[
+        1 if i != row_i else scalar for i in range(size)
+    ])
+
+def elementary_add(size, row_inp, row_outp, scalar):
+    out = eye(size)
+    out[row_outp, row_inp] = scalar
+    return out
+
+def bruhat(matrix_fd, e):
+    # currently only works for borel
+    pivot_row = 0
+    pivot_col = 0
+
+    size = matrix_fd.shape[0]
+    left = eye(size)
+    w = eye(size)
+    right = matrix_fd
+
+    while pivot_row < size and pivot_col < size:
+        i_max = max(
+            [(i, right[i, pivot_col]) for i in range(pivot_row, size)], key=lambda x: x[1]
+        )[0]
+        if right[i_max, pivot_col] == 0:
+            pivot_col += 1
+        else:
+            swap = elementary_swap(size, pivot_row, i_max)
+            w *= swap
+            right = swap * right
+
+            for i in range(pivot_row + 1, size):
+                quotient = right[i, pivot_col] / right[pivot_row, pivot_col]
+                subtr = elementary_add(size, pivot_row, i, -quotient)
+                right = subtr * right
+                left *= subtr.inv()
+
+            pivot_row += 1
+            pivot_col += 1
+
+    return left, w, right
+
+
+def iwahori_bruhat(matrix: Matrix, e):
     """
-    G(O) = BWI
+    G(O) = P W I_P
     :param matrix:
     :return:
     """
-    m = matrix.rref
-    # for testing, just bruhat
-    return eye(3), eye(3), eye(3)
+    matrix_fd = mod_t(matrix)
+    size = matrix.shape[0]
 
+    left_p, w, right_p = bruhat(matrix_fd, e)
 
-def right_iwahori_decomposition(matrix):
+    right_i = right_p  # todo
+
+    return left_p, w, right_i
+
+def right_iwahori_decomposition(matrix, e):
     # Step 1: Cartan
     cartan_decomposition = cartan(matrix)
     t_k: Matrix
     g_o_left, t_k, g_o_right = cartan_decomposition
+    assert g_o_left * t_k * g_o_right == matrix, "Cartan failed"
     t_k_inverse = t_k.inv()
     # Step 2: Iwahori-Bruhat on right G(O)
-    b_left, w, i_right = iwahori_bruhat(g_o_right)
+    p_left, w, i_right = iwahori_bruhat(g_o_right, e)
+    assert p_left * w * i_right == g_o_right, "Iwahori-Bruhat on right factor failed"
     # Step 3: Pass B, W through T
-    b_left = t_k * b_left * t_k_inverse
+    p_left = t_k * p_left * t_k_inverse
     w = t_k * w * t_k_inverse
-    g_o_left *= (b_left * w)
+    g_o_left *= (p_left * w)
 
-    assert g_o_left * t_k * i_right == matrix
+    assert g_o_left * t_k * i_right == matrix, "Final sanity check failed"
     return g_o_left, t_k, i_right
 
 
-# TODO:
 # 1. Cartan decomposition of arbitrary g
 # 2. Bruhat decomposition of left G(O) factor
 # 3. Sample matrices in U_P(K) and see what Bruhat says
@@ -89,9 +149,12 @@ def right_iwahori_decomposition(matrix):
 # 
 # From here probably it's clear: G(K) = G(O)T(K)G(O) = G(O)*T(K)*B*W*I = G(O)*B*W*T(K)*I= G(O) T(K) I.
 g = Matrix([
-    [1, 2, 3],
-    [0, 1, 4],
-    [0, 5, 1]
+    [1 + t, 2, 3, 4],
+    [0, 1, 0, 4],
+    [0, 5, 1, 1],
+    [0, 0, 0, 1]
 ])
 
-pprint(right_iwahori_decomposition(g))
+e = Matrix([[0, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 1], [0, 0, 0, 0]])
+
+pprint(right_iwahori_decomposition(g, e))
