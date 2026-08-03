@@ -112,11 +112,11 @@ def iwahori_bruhat(matrix: Matrix, e):
     :return:
     """
     matrix_fd = mod_t(matrix)
-    size = matrix.shape[0]
+    rest_of_matrix = matrix - matrix_fd
 
     left_p, w, right_p = bruhat(matrix_fd, e)
 
-    right_i = right_p  # todo
+    right_i = right_p + w.inv() * left_p.inv() * rest_of_matrix
 
     return left_p, w, right_i
 
@@ -130,12 +130,12 @@ def right_iwahori_decomposition(matrix, e):
     # Step 2: Iwahori-Bruhat on right G(O)
     p_left, w, i_right = iwahori_bruhat(g_o_right, e)
     assert p_left * w * i_right == g_o_right, "Iwahori-Bruhat on right factor failed"
-    # Step 3: Pass B, W through T
+    # Step 3: Pass P, W through T
     p_left = t_k * p_left * t_k_inverse
     w = t_k * w * t_k_inverse
     g_o_left *= (p_left * w)
+    assert (g_o_left * t_k * i_right).applyfunc(simplify) == matrix, "Final sanity check failed"
 
-    assert g_o_left * t_k * i_right == matrix, "Final sanity check failed"
     return g_o_left, t_k, i_right
 
 
